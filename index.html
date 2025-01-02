@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f0f0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background-color: white;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    input {
+      padding: 10px;
+      font-size: 16px;
+      width: 80%;
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    button {
+      padding: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .weather-info {
+      margin-top: 20px;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Weather App</h1>
+    <p>Enter a location (or allow location access for automatic detection):</p>
+    <input type="text" id="locationInput" placeholder="Enter location...">
+    <button onclick="getWeather()">Get Weather</button>
+
+    <div id="weatherResult" class="weather-info"></div>
+  </div>
+
+  <script>
+    const apiKey = '1c9c0c9c8a36eafc294238d243504111'; // Replace with your OpenWeatherMap API key
+    const weatherResultDiv = document.getElementById('weatherResult');
+
+    // Get weather based on user input or geolocation
+    function getWeather() {
+      const location = document.getElementById('locationInput').value.trim();
+
+      if (location) {
+        fetchWeather(location);
+      } else {
+        getLocationAndFetchWeather();
+      }
+    }
+
+    // Fetch weather for a given location (city name or coordinates)
+    function fetchWeather(location) {
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=${apiKey}&units=metric`;
+
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          if (data.cod === 200) {
+            displayWeather(data);
+          } else {
+            displayError(data.message);
+          }
+        })
+        .catch(error => displayError('Error fetching weather data.'));
+    }
+
+    // Get the user's current location and fetch weather based on that
+    function getLocationAndFetchWeather() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+
+          const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
+
+          fetch(url)
+            .then(response => response.json())
+            .then(data => {
+              if (data.cod === 200) {
+                displayWeather(data);
+              } else {
+                displayError(data.message);
+              }
+            })
+            .catch(error => displayError('Error fetching weather data.'));
+        }, () => {
+          displayError('Unable to retrieve your location.');
+        });
+      } else {
+        displayError('Geolocation is not supported by this browser.');
+      }
+    }
+
+    // Display weather data on the page
+    function displayWeather(data) {
+      weatherResultDiv.innerHTML = `
+        <h2>${data.name}, ${data.sys.country}</h2>
+        <p><strong>Weather:</strong> ${data.weather[0].description}</p>
+        <p><strong>Temperature:</strong> ${data.main.temp}°C</p>
+        <p><strong>Humidity:</strong> ${data.main.humidity}%</p>
+        <p><strong>Wind Speed:</strong> ${data.wind.speed} m/s</p>
+      `;
+    }
+
+    // Display an error message
+    function displayError(message) {
+      weatherResultDiv.innerHTML = `<p class="error">Error: ${message}</p>`;
+    }
+  </script>
+
+</body>
+</html>
